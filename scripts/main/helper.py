@@ -1,7 +1,4 @@
-import time
-
 import pygame
-from PIL import Image, ImageDraw
 from easing_functions import *
 
 from scripts import CONST
@@ -41,7 +38,8 @@ def SetParalax(intensity):
 
 def getTimeValue(beginTime, finalTime, beginValue, endValue,
                  easing=EaseTypes.linear):
-    now = time.time() * 1000
+    from time import time
+    now = time() * 1000
     timeSinceBegin = now - beginTime
     duration = finalTime - beginTime
 
@@ -89,11 +87,45 @@ def getSyncValue(beginValue, endValue, easing=EaseTypes.linear):
     return final
 
 
+isQuitting = False
+
+
+def GameQuit():
+    global isQuitting
+    from pygameElements import PygameText
+    if isQuitting:
+        InstantQuit()
+        return
+    isQuitting = True
+    try:
+        CONST.WindowLeft.dispose()
+        CONST.WindowCenter.dispose()
+        CONST.WindowRight.dispose()
+    except:
+        pass
+    CONST.AudioManager.play(
+        CONST.AudioManager.loadSound("goodbye.mp3", SkinSource.user))
+    CONST.AudioManager.Stop()
+    CONST.MenuManager.activeMenu.Transition = True
+    for sprite in CONST.foregroundSprites.sprites:
+        sprite.FadeTo(0, 1000, EaseTypes.easeInOut)
+    for sprite in CONST.backgroundSprites.sprites:
+        sprite.FadeTo(0, 5000, EaseTypes.easeInOut)
+    for sprite in CONST.overlaySprites.sprites:
+        sprite.FadeTo(0, 200, EaseTypes.easeInOut)
+    goodbye = PygameText("Goodbye", 70, FontStyle.regular, vector2(0, 0),
+                         Positions.centre, Positions.centre)
+    CONST.overlaySprites.add(goodbye)
+    goodbye.FadeTo(0, 6000, EaseTypes.easeIn)
+    CONST.Scheduler.AddDelayed(6000, InstantQuit)
+
+
 def InstantQuit():
     CONST.Running = False
 
 
 def cornerBounds(sprite, rad):
+    from PIL import Image, ImageDraw
     im = pygame.image.tostring(sprite.image, "RGBA")
     im = Image.frombytes("RGBA",
                          (sprite.image.get_width(), sprite.image.get_height()),

@@ -128,6 +128,70 @@ class PygameNotification:
                                    sprite=self.text)
 
 
+class NotificationMassive:
+    def __init__(self, text, duration, type=NotificationType.Info):
+
+        self.length = duration
+
+        background = PygameSprite(CONST.PixelWhite, vector2(0, 0),
+                                  SkinSource.local,
+                                  Positions.topLeft, Positions.topLeft,
+                                  Color(0, 0, 0))
+        background.Fade(0.8)
+        background.VectorScale(vector2(1920, 100))
+        if type == NotificationType.Info:
+            Fgcolor = Color(0, 142, 250)
+            textcolor = Color(255, 255, 255)
+        elif type == NotificationType.Warning:
+            Fgcolor = Color(255, 136, 0)
+            textcolor = Color(255, 136, 0)
+        else:
+            Fgcolor = Color(255, 0, 0)
+            textcolor = Color(255, 0, 0)
+        foreGround = PygameSprite(CONST.PixelWhite, vector2(0, 100),
+                                  SkinSource.local, Positions.topCentre,
+                                  Positions.bottomCentre, Fgcolor)
+        foreGround.VectorScale(vector2(1900, 10))
+        text = PygameText(text, 30, FontStyle.regular, vector2(0, 25),
+                          Positions.topCentre, Positions.centre, textcolor)
+        foreGround.tag = "Notification"
+        background.tag = "Notification"
+        text.tag = "Notification"
+        self.text = text
+        self.bg = background
+        self.fg = foreGround
+
+    def show(self):
+        for sprite in CONST.overlaySprites.sprites:
+            if sprite.tag == "Notification":
+                sprite.MoveTo(0, 50, 400, EaseTypes.easeOut)
+                sprite.FadeTo(0, 400, EaseTypes.easeOut)
+                CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                           sprite=sprite)
+        CONST.overlaySprites.add(self.bg)
+        CONST.overlaySprites.add(self.fg)
+        CONST.overlaySprites.add(self.text)
+        self.fg.FadeTo(1, 400, EaseTypes.easeInOut)
+        self.fg.VectorScaleTo(vector2(0, 10), self.length)
+        self.bg.FadeTo(0.7, 400, EaseTypes.easeInOut)
+        self.text.FadeTo(1, 400, EaseTypes.easeInOut)
+
+        CONST.Scheduler.AddDelayed(self.length, self.dispose)
+
+    def dispose(self):
+
+        self.text.FadeTo(0, 400, EaseTypes.easeOut)
+        self.fg.FadeTo(0, 400, EaseTypes.easeOut)
+        self.bg.FadeTo(0, 400, EaseTypes.easeOut)
+
+        CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                   sprite=self.bg)
+        CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                   sprite=self.fg)
+        CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                   sprite=self.text)
+
+
 class PygameButton:
     def __init__(self, text, size, style=FontStyle.regular,
                  position=vector2(0, 0), color=Color(255, 255, 255, 255)):

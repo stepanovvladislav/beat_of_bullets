@@ -34,6 +34,12 @@ class FontStyle:
     thin = "Thin.otf"
 
 
+class NotificationType:
+    Info = 0
+    Warning = 1
+    Error = 2
+
+
 class Notes:
     short = 0
     long = 1
