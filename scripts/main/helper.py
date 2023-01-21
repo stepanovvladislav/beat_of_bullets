@@ -66,6 +66,17 @@ def getEase(type, begin, end, duration, advancement, difference):
             advancement * 100) * difference)
 
 
+def getSyncValue(beginValue, endValue, easing=EaseTypes.linear):
+    advancement = CONST.AudioManager.GetRelativePos()
+    difference = endValue - beginValue
+    final = round(
+        getEase(easing, beginValue, endValue, CONST.AudioManager.BeatLength(),
+                advancement, difference), 4)
+    if final < 0:
+        return beginValue
+    return final
+
+
 def InstantQuit():
     CONST.Running = False
 

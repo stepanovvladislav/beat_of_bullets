@@ -15,6 +15,8 @@ surface = None
 Config = None
 clock = None
 db = None
+Afk = False
+LastActive = None
 Framerate = 30
 
 volume = 1
