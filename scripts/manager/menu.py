@@ -1,4 +1,5 @@
 from scripts import CONST
+from scripts.main.data import *
 from scripts.menu.mainMenu import MainMenu
 from scripts.menu.play import Gameplay
 from scripts.menu.rank import RankingPanel
