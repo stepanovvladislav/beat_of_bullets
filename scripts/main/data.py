@@ -24,6 +24,12 @@ class Clocks:
     audio = 1
 
 
+class SkinSource:
+    local = 0
+    user = 1
+    absolute = 2
+
+
 class EaseTypes:
     linear = 0
     easeIn = 1
