@@ -3,6 +3,7 @@ import os
 from scripts.main.data import *
 from scripts.manager.sprite import SpriteManager
 
+Debug = False
 Running = False
 
 Name = "BoB"
@@ -32,3 +33,7 @@ volume = 1
 backgroundSprites = SpriteManager()
 foregroundSprites = SpriteManager()
 overlaySprites = SpriteManager()
+
+WindowLeft = None
+WindowCenter = None
+WindowRight = None

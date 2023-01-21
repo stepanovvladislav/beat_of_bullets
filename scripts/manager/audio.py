@@ -14,6 +14,7 @@ from scripts.main.pygameElements import PygameText
 
 last = 0
 
+
 class AudioManager:
     def __init__(self):
         pygame.mixer.init()
@@ -23,9 +24,6 @@ class AudioManager:
         CONST.UserEvents["MUSIC_END"] = MUSIC_END
         pygame.mixer.music.set_endevent(CONST.UserEvents["MUSIC_END"])
         self.alreadyPlayed = {}
-        # self.debugVisualizer = PygameSprite(CONST.PixelWhite,vector2(0,0), SkinSource.local, Positions.bottomCentre, Positions.bottomCentre, Color(255,0,0))
-        # self.debugVisualizer.VectorScale(vector2(1920,5))
-        # CONST.overlaySprites.add(self.debugVisualizer)
 
     def BeatCount(self):
         beatLength = self.BeatLength()
@@ -161,4 +159,3 @@ class AudioManager:
         beatLength = 60000 / bpm
         pos = pygame.mixer.music.get_pos()
         return int(((pos - offset) % beatLength)) / beatLength
-
