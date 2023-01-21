@@ -1,3 +1,12 @@
+class WindowManager:
+    def __init__(self):
+        self.width, self.height = 0, 0
+        self.widthScaled, self.heightScaled = 1920, 1080
+
+    def getPixelSize(self):
+        return self.width / 1920
+
+
 class Positions:
     topLeft = 0
     topCentre = 1
@@ -8,6 +17,12 @@ class Positions:
     bottomLeft = 6
     bottomCentre = 7
     bottomRight = 8
+
+
+class SkinSource:
+    local = 0
+    user = 1
+    absolute = 2
 
 
 class FontStyle:

@@ -1,6 +1,7 @@
 import time
 
 import pygame
+from PIL import Image, ImageDraw
 from easing_functions import *
 
 from scripts import CONST
@@ -64,5 +65,25 @@ def getEase(type, begin, end, duration, advancement, difference):
         return begin + (BounceEaseInOut(start=0, end=1, duration=100).ease(
             advancement * 100) * difference)
 
+
 def InstantQuit():
     CONST.Running = False
+
+
+def cornerBounds(sprite, rad):
+    im = pygame.image.tostring(sprite.image, "RGBA")
+    im = Image.frombytes("RGBA",
+                         (sprite.image.get_width(), sprite.image.get_height()),
+                         im, "raw")
+
+    circle = Image.new('L', (rad * 2, rad * 2), 0)
+    draw = ImageDraw.Draw(circle)
+    draw.ellipse((0, 0, rad * 2, rad * 2), fill=255)
+    alpha = Image.new('L', im.size, 255)
+    w, h = im.size
+    alpha.paste(circle.crop((0, 0, rad, rad)), (0, 0))
+    alpha.paste(circle.crop((0, rad, rad, rad * 2)), (0, h - rad))
+    alpha.paste(circle.crop((rad, 0, rad * 2, rad)), (w - rad, 0))
+    alpha.paste(circle.crop((rad, rad, rad * 2, rad * 2)), (w - rad, h - rad))
+    im.putalpha(alpha)
+    return im.tobytes()
