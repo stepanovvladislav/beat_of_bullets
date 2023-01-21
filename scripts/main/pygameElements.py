@@ -11,6 +11,222 @@ originMult = 1
 posMult = 1
 
 
+class PygameNotification:
+    def __init__(self, text, duration, color=Color(255, 0, 0)):
+
+        self.length = duration
+
+        text = PygameText(text, 15, FontStyle.regular, vector2(0, 0),
+                          Positions.bottomRight, Positions.bottomRight)
+        textHeight, textWidth = max(text.text.get_height(), 10), max(
+            text.text.get_width(), 100)
+
+        background = PygameSprite(CONST.PixelWhite, vector2(0, 0),
+                                  SkinSource.local,
+                                  Positions.bottomRight, Positions.bottomRight,
+                                  Color(0, 0, 0))
+        background.Fade(0.8)
+        background.VectorScale(vector2(textWidth * 1.5 + 20, textHeight + 10))
+
+        text.position = vector2(0, 2)
+        foreGround = PygameSprite(CONST.PixelWhite, vector2(0, 0),
+                                  SkinSource.local,
+                                  Positions.bottomRight,
+                                  Positions.bottomCentre,
+                                  color)
+        foreGround.VectorScale(vector2(background.image.get_width(), 5))
+
+        foreGround.tag = "SNotification"
+        background.tag = "SNotification"
+        text.tag = "SNotification"
+        self.text = text
+        self.bg = background
+        self.fg = foreGround
+
+    def show(self):
+        for sprite in CONST.overlaySprites.sprites:
+            if sprite.tag == "SNotification":
+                sprite.posMult = -1
+                sprite.posMultY = -1
+                sprite.MoveTo(sprite.position.x,
+                              sprite.position.y + self.bg.image.get_height() + 2,
+                              200, EaseTypes.easeInOut)
+        CONST.overlaySprites.add(self.bg)
+        CONST.overlaySprites.add(self.fg)
+        CONST.overlaySprites.add(self.text)
+        self.fg.FadeTo(1, 400, EaseTypes.easeInOut)
+        self.fg.VectorScaleTo(vector2(0, 5), self.length)
+        self.bg.FadeTo(0.7, 400, EaseTypes.easeInOut)
+        self.text.FadeTo(1, 400, EaseTypes.easeInOut)
+        self.bg.posMult = -1
+        self.bg.posMultY = -1
+        self.fg.posMult = -1
+        self.fg.posMultY = -1
+        CONST.Scheduler.AddDelayed(self.length, self.dispose)
+
+    def dispose(self):
+
+        self.text.FadeTo(0, 400, EaseTypes.easeOut)
+        self.fg.FadeTo(0, 400, EaseTypes.easeOut)
+        self.bg.FadeTo(0, 400, EaseTypes.easeOut)
+
+        CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                   sprite=self.bg)
+        CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                   sprite=self.fg)
+        CONST.Scheduler.AddDelayed(400, CONST.overlaySprites.remove,
+                                   sprite=self.text)
+
+
+class PygameButton:
+    def __init__(self, text, size, style=FontStyle.regular,
+                 position=vector2(0, 0), color=Color(255, 255, 255, 255)):
+
+        self.originPosition = position
+        self.position = vector2(0, 0)
+        self.color = color
+        self.size = size
+
+        self.centreButton = PygameSprite(CONST.PixelWhite, position=position,
+                                         skinSource=SkinSource.local,
+                                         field=Positions.topLeft,
+                                         origin=Positions.centre, color=color)
+
+        self.centreButton.VectorScale(size)
+        offset = 0.57
+        pos = position
+        poss = Positions
+
+        self.text = PygameText(text, (0.8 * size.y), style,
+                               position=vector2(pos.x * offset,
+                                                pos.y * offset - 15),
+                               field=poss.topLeft, origin=poss.centre)
+
+        self.rightButton = PygameSprite("button-right.png",
+                                        vector2(pos.x + (size.x / 2) - 1,
+                                                pos.y), SkinSource.local,
+                                        poss.topLeft, poss.centreLeft, color)
+
+        self.leftButton = PygameSprite("button-left.png",
+                                       vector2(pos.x - (size.x / 2) + 1,
+                                               pos.y), SkinSource.local,
+                                       poss.topLeft, poss.centreRight, color)
+
+        self.rightButton.Scale((1 / 500) * size.y)
+        self.leftButton.Scale((1 / 500) * size.y)
+
+        self.tag = ""
+        self.onhover = []
+        self.onhoverlost = []
+        self.onclick = []
+        self.isonHover = False
+        self.enabled = True
+
+    def onHover(self, function, **kwargs):
+        self.onhover.append([function, kwargs])
+
+    def onHoverLost(self, function, **kwargs):
+        self.onhoverlost.append([function, kwargs])
+
+    def onClick(self, function, **kwargs):
+        self.onclick.append([function, kwargs])
+
+    def enable(self):
+        self.enabled = True
+        self.centreButton.enable()
+        self.rightButton.enable()
+        self.leftButton.enable()
+        self.text.enable()
+
+    def disable(self):
+        self.enabled = False
+        self.centreButton.disable()
+        self.rightButton.disable()
+        self.leftButton.disable()
+        self.text.disable()
+
+    def __onHover__(self):
+        for hoverAction in self.onhover:
+            if hoverAction[1] == {}:
+                hoverAction[0]()
+            else:
+                hoverAction[0](**hoverAction[1])
+        self.centreButton.VectorScaleTo(vector2(self.size.x + 10, self.size.y),
+                                        200)
+        self.centreButton.Color(
+            Color(min(self.color.r + 30, 255), min(self.color.g + 30, 255),
+                  min(self.color.b + 30, 255)))
+        self.rightButton.Color(
+            Color(min(self.color.r + 30, 255), min(self.color.g + 30, 255),
+                  min(self.color.b + 30, 255)))
+        self.leftButton.Color(
+            Color(min(self.color.r + 30, 255), min(self.color.g + 30, 255),
+                  min(self.color.b + 30, 255)))
+
+    def ClearTransformations(self):
+        pass
+
+    def __onHoverLost__(self):
+        for hoverLostAction in self.onhoverlost:
+            if hoverLostAction[1] == {}:
+                hoverLostAction[0]()
+            else:
+                hoverLostAction[0](hoverLostAction[1])
+        self.centreButton.VectorScaleTo(vector2(self.size.x + 10, self.size.y),
+                                        200)
+        self.centreButton.Color(self.color)
+        self.rightButton.Color(self.color)
+        self.leftButton.Color(self.color)
+
+    def __onClick__(self):
+        for click in self.onclick:
+            if click[1] == {}:
+                click[0]()
+            else:
+                click[0](**click[1])
+        self.centreButton.Color(Color(255, 255, 255))
+        self.centreButton.FadeColorTo(self.color, 300, EaseTypes.easeInOut)
+        self.rightButton.Color(Color(255, 255, 255))
+        self.rightButton.FadeColorTo(self.color, 300, EaseTypes.easeInOut)
+        self.leftButton.Color(Color(255, 255, 255))
+        self.leftButton.FadeColorTo(self.color, 300, EaseTypes.easeInOut)
+
+    def Position(self, position):
+        self.position = position
+        self.centreButton.position = position
+        self.rightButton.position = position
+        self.leftButton.position = position
+        self.text.position = position
+
+    def Fade(self, x):
+        self.centreButton.Fade(x)
+        self.text.Fade(x)
+        self.leftButton.Fade(x)
+        self.rightButton.Fade(x)
+
+    def FadeTo(self, value, duration, easing=EaseTypes.linear):
+        self.centreButton.FadeTo(value, duration, easing)
+        self.text.FadeTo(value, duration, easing)
+        self.leftButton.FadeTo(value, duration, easing)
+        self.rightButton.FadeTo(value, duration, easing)
+
+    def draw(self):
+        self.centreButton.draw()
+        self.rightButton.draw()
+        self.leftButton.draw()
+        self.text.draw()
+        if self.enabled:
+            if ((self.centreButton.isonHover or self.rightButton.isonHover or
+                 self.leftButton.isonHover) and not self.isonHover):
+                self.__onHover__()
+                self.isonHover = True
+            elif not ((self.centreButton.isonHover or
+                       self.rightButton.isonHover or
+                       self.leftButton.isonHover) and self.isonHover):
+                self.__onHoverLost__()
+                self.isonHover = False
+
+
 class PygameText:
 
     def __init__(self, text, textSize, style=FontStyle.regular,

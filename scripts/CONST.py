@@ -15,6 +15,7 @@ surface = None
 Config = None
 clock = None
 db = None
+PixelWhite = "pixel.png"
 Framerate = 30
 
 volume = 1
