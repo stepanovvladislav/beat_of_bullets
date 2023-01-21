@@ -1,5 +1,3 @@
-
-
 class Positions:
     topLeft = 0
     topCentre = 1
@@ -12,6 +10,14 @@ class Positions:
     bottomRight = 8
 
 
+class EaseTypes:
+    linear = 0
+    easeIn = 1
+    easeOut = 2
+    easeInOut = 3
+    BounceIn = 4
+    BounceOut = 5
+
 
 class vector2:
     """Used to determine a position, but more explicit than tuples"""
@@ -19,6 +25,9 @@ class vector2:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+
+    def __str__(self):
+        return "Vector2({},{})".format(self.x, self.y)
 
     def __mul__(self, x):
         if type(x) not in (vector2, int, float):
@@ -30,7 +39,24 @@ class vector2:
         else:
             return vector2(self.x * x.x, self.y * x.y)
 
+
+class Color:
+
+    def __init__(self, r, g, b, a=255):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
     def __str__(self):
-        return "Vector2({},{})".format(self.x, self.y)
+        return "Color({},{},{},{})".format(self.r, self.g, self.b, self.a)
 
+    def __mul__(self, x):
+        if type(x) not in (vector2, int, float):
+            raise TypeError(
+                "can only multiply color by  int/floats or color object")
+        if type(x) in (int, float):
+            return Color(self.r * x, self.g * x, self.b * x)
 
+        else:
+            return Color(self.r * x.r, self.g * x.g, self.b * x.b)
