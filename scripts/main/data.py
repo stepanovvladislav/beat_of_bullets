@@ -34,6 +34,17 @@ class FontStyle:
     thin = "Thin.otf"
 
 
+class Notes:
+    short = 0
+    long = 1
+    double = 2
+
+
+class NotePos:
+    Upper = 0
+    Lower = 1
+
+
 class Menus:
     MainMenu = 0
     SongSelection = 1

@@ -11,6 +11,56 @@ originMult = 1
 posMult = 1
 
 
+class PygameNote:
+    def __init__(self, time, position, Approach, refObject):
+
+        self.time = time
+        if position == NotePos.Upper:
+            color = Color(102, 66, 245)
+            Field = Positions.topCentre
+            mult = 1
+        else:
+            mult = -1
+            color = Color(245, 64, 64)
+            Field = Positions.bottomCentre
+
+        self.Sprite = PygameSprite("file.png",
+                                   vector2(0, 200 * mult), SkinSource.user,
+                                   Field,
+                                   Positions.centre, color, Clocks.audio,
+                                   False)
+        self.Sprite.scale = 0.2
+        self.Sprite.loadFrom(refObject)
+        self.Sprite.position = vector2(5550, 5550)
+
+        if position == NotePos.Lower:
+            self.Sprite.tag = "LowerElement"
+        else:
+            self.Sprite.tag = "UpperElement"
+
+        CONST.foregroundSprites.add(self.Sprite)
+        self.Sprite.transformations["position"]["beginTime"] = time - Approach
+        self.Sprite.transformations["position"]["endTime"] = time + Approach
+        self.Sprite.transformations["position"]["beginValue"] = vector2(1000,
+                                                                        0)
+        self.Sprite.transformations["position"]["endValue"] = vector2(-1000, 0)
+        self.Sprite.transformations["position"]["easing"] = EaseTypes.linear
+        self.Sprite.transformations["position"]["loop"] = False
+
+    def Miss(self):
+        self.Sprite.Color(Color(255, 0, 0))
+        self.Sprite.FadeTo(0, 200)
+        CONST.Scheduler.AddDelayed(200, CONST.foregroundSprites.remove,
+                                   sprite=self.Sprite)
+
+    def Hit(self):
+        self.Sprite.ClearTransformations()
+        self.Sprite.ScaleTo(0.3, 300, EaseTypes.easeOut)
+        self.Sprite.FadeTo(0, 300, EaseTypes.easeOut)
+        CONST.Scheduler.AddDelayed(300, CONST.foregroundSprites.remove,
+                                   sprite=self.Sprite)
+
+
 class PygameNotification:
     def __init__(self, text, duration, color=Color(255, 0, 0)):
 
