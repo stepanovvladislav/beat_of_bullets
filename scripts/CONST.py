@@ -18,6 +18,7 @@ clock = None
 MenuManager = None
 AudioManager = None
 db = None
+PixelWhite = "pixel.png"
 Starting = True
 Background = None
 Scheduler = None
