@@ -27,6 +27,18 @@ def getAudioTimeValue(beginTime, finalTime, beginValue, endValue,
                          difference), 4)
 
 
+def getParralax(x, y):
+    screenX = CONST.windowManager.width
+    screenY = CONST.windowManager.height
+    return x - screenX / 2, y - screenY / 2
+
+
+def SetParalax(intensity):
+    parraX, parraY = getParralax(CONST.cursorPos.x, CONST.cursorPos.y)
+    return vector2(parraX / intensity / CONST.windowManager.getPixelSize(),
+                   parraY / intensity / CONST.windowManager.getPixelSize())
+
+
 def getTimeValue(beginTime, finalTime, beginValue, endValue,
                  easing=EaseTypes.linear):
     now = time.time() * 1000
