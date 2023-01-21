@@ -1,6 +1,7 @@
 import os
 
 from scripts.main.data import *
+from scripts.manager.sprite import SpriteManager
 
 Running = False
 
@@ -17,3 +18,7 @@ db = None
 Framerate = 30
 
 volume = 1
+
+backgroundSprites = SpriteManager()
+foregroundSprites = SpriteManager()
+overlaySprites = SpriteManager()
