@@ -1,5 +1,7 @@
 import os
 
+from scripts.manager.sprite import SpriteManager
+
 Running = False
 
 Name = "BoB"
@@ -12,3 +14,7 @@ db = None
 Framerate = 30
 
 volume = 1
+
+backgroundSprites = SpriteManager()
+foregroundSprites = SpriteManager()
+overlaySprites = SpriteManager()

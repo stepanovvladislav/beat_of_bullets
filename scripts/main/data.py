@@ -19,6 +19,14 @@ class FontStyle:
     thin = "Thin.otf"
 
 
+class Menus:
+    MainMenu = 0
+    SongSelection = 1
+    Playing = 2
+    Ranking = 3
+    CharacterSelection = 4
+
+
 class Clocks:
     game = 0
     audio = 1
