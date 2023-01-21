@@ -2,13 +2,15 @@ import sys
 
 import pygame
 from pygame.locals import *
-
+from scripts.config import Config
 from scripts import CONST
 from scripts.main.database import Db
 
 if __name__ == "__main__":
 
+    CONST.Config = Config()
     CONST.db = Db()
+    CONST.volume = CONST.Config["volume"]
 
     pygame.init()
 

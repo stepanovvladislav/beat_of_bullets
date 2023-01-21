@@ -10,6 +10,20 @@ class Positions:
     bottomRight = 8
 
 
+class FontStyle:
+    bold = "Bold.otf"
+    regular = "Regular.otf"
+    heavy = "Heavy.otf"
+    light = "Light.otf"
+    semiBold = "SemiBold.otf"
+    thin = "Thin.otf"
+
+
+class Clocks:
+    game = 0
+    audio = 1
+
+
 class EaseTypes:
     linear = 0
     easeIn = 1
