@@ -18,6 +18,7 @@ Config = None
 clock = None
 MenuManager = None
 AudioManager = None
+enemy = None
 db = None
 PixelWhite = "pixel.png"
 Starting = True

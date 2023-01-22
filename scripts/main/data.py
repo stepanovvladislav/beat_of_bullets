@@ -51,6 +51,12 @@ class NotePos:
     Lower = 1
 
 
+class Difficulty:
+    Normal = 0
+    Hard = 1
+    Insane = 2
+
+
 class Menus:
     MainMenu = 0
     SongSelection = 1
