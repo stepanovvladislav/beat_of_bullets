@@ -51,6 +51,7 @@ class Menus:
     Playing = 2
     Ranking = 3
     CharacterSelection = 4
+    SettingsMenu = 5
 
 
 class Clocks:
