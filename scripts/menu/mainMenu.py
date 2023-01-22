@@ -14,6 +14,7 @@ class MainMenu:
     def __init__(self):
         self.Playbutton = None
         self.exit = None
+        self.setting = None
         self.background = None
         self.logoHero = None
         self.title = None
@@ -25,10 +26,10 @@ class MainMenu:
         self.version = None
         self.NowPlaying = None
         self.idle = False
-        self.SoundHover = CONST.AudioManager.loadSound("button-hover.wav",
-                                                       SkinSource.local)
-        self.SoundClick = CONST.AudioManager.loadSound("button-select.wav",
-                                                       SkinSource.local)
+
+        sound = CONST.AudioManager.loadSound
+        self.SoundHover = sound("button-hover.wav", SkinSource.local)
+        self.SoundClick = sound("button-select.wav", SkinSource.local)
 
         self.Transition = False
         self.disposeTime = 400
@@ -40,15 +41,14 @@ class MainMenu:
         self.idlePosBar = None
         self.idleDisc = None
         self.idleClickText = None
-        pass
 
     def init(self):
         CONST.Framerate = 30
 
         try:
-            self.SongName = CONST.AudioManager.currentSong["artist"] + " | " + \
-                            CONST.AudioManager.currentSong["name"]
-        except:
+            self.SongName = CONST.AudioManager.currentSong["artist"] + \
+                            " | " + CONST.AudioManager.currentSong["name"]
+        except Exception:
             self.SongName = ""
 
         upperBar = PygameSprite(CONST.PixelWhite, vector2(0, 0),
@@ -78,20 +78,32 @@ class MainMenu:
         self.background = menuBg
         CONST.foregroundSprites.add(menuBg)
 
-        version = PygameText("data", 50,
-                             position=vector2(10, -5),
+        version = PygameText(" data", 50,
+                             position=vector2(5, -5),
                              field=Positions.bottomLeft,
                              origin=Positions.bottomLeft)
         CONST.foregroundSprites.add(version)
         self.version = version
+        menu = CONST.MenuManager.ChangeMenu
 
-        button = PygameButton("Play", vector2(475, 200),
-                              position=vector2(460, 660),
-                              color=Color(81, 0, 255))
+        setting = PygameButton("Settings", vector2(475, 200),
+                               position=vector2(460, 660),
+                               color=Color(81, 0, 255))
+        self.setting = setting
+        self.setting.onHover(CONST.AudioManager.play,
+                             sound=self.SoundHover)
+
+        self.setting.onClick(menu, type=Menus.SettingsMenu)
+        self.setting.onClick(CONST.AudioManager.play,
+                             sound=self.SoundClick)
+        CONST.foregroundSprites.add(setting)
+
+        button = PygameButton("Play", vector2(410, 200),
+                              position=vector2(415, 450),
+                              color=Color(165, 63, 176))
         self.Playbutton = button
         self.Playbutton.onHover(CONST.AudioManager.play, sound=self.SoundHover)
-        self.Playbutton.onClick(CONST.MenuManager.ChangeMenu,
-                                type=Menus.SongSelection)
+        self.Playbutton.onClick(menu, type=Menus.CharacterSelection)
         self.Playbutton.onClick(CONST.AudioManager.play, sound=self.SoundClick)
         CONST.foregroundSprites.add(button)
 
@@ -109,7 +121,7 @@ class MainMenu:
         self.logoHero = LogoHero
         CONST.foregroundSprites.add(LogoHero)
 
-        Title = PygameSprite("title.png", vector2(350, 300), SkinSource.local,
+        Title = PygameSprite("title.png", vector2(350, 250), SkinSource.local,
                              Positions.topLeft, Positions.centre)
         self.title = Title
         CONST.foregroundSprites.add(Title)
@@ -119,13 +131,18 @@ class MainMenu:
                                 origin=Positions.topRight)
         self.NowPlaying = NowPlaying
         CONST.foregroundSprites.add(NowPlaying)
+
         if CONST.Starting:
+
             self.Transition = True
             Title.Fade(0)
             upperBar.Fade(0)
             bottomBar.Fade(0)
             menuBg.Fade(0)
             NowPlaying.Fade(0)
+
+            setting.Fade(0)
+            setting.position = vector2(-500, 0)
 
             button.Fade(0)
             button.position = vector2(-500, 0)
@@ -159,6 +176,7 @@ class MainMenu:
                                                 Positions.centre)
             IntroTitleBackground.Fade(0)
             self.introLogoBg = IntroTitleBackground
+
             CONST.Scheduler.AddDelayed(2426, IntroTitleBackground.FadeTo,
                                        value=1, duration=800,
                                        easing=EaseTypes.easeInOut)
@@ -177,18 +195,20 @@ class MainMenu:
             CONST.Scheduler.AddDelayed(7234, NowPlaying.FadeTo, value=1,
                                        duration=800,
                                        easing=EaseTypes.easeInOut)
+
             CONST.Scheduler.AddDelayed(8234, self.endTransformation)
             CONST.foregroundSprites.add(IntroTitleBackground)
             CONST.foregroundSprites.add(IntroTitle)
             CONST.foregroundSprites.add(ClickButton)
+
         else:
+
             self.Transition = True
             for sprite in CONST.foregroundSprites.sprites:
                 sprite.Fade(0)
                 sprite.FadeTo(1, 400)
-            CONST.AudioManager.ChangeBackground(
-                "/data/sprites/bob_background.png",
-                400)
+            CONST.AudioManager.ChangeBackground("/data/sprites/background.png",
+                                                400)
             CONST.Scheduler.AddDelayed(400, self.endTransformation)
 
     def endTransformation(self):
@@ -220,6 +240,9 @@ class MainMenu:
             self.background.position = vector2(-500, 0)
             self.background.MoveTo(0, 0, 800, EaseTypes.easeOut)
             self.background.FadeTo(1, 800, EaseTypes.easeInOut)
+
+            CONST.Scheduler.AddDelayed(600, self.setting.FadeTo, value=1,
+                                       duration=500)
 
             CONST.Scheduler.AddDelayed(500, self.Playbutton.FadeTo, value=1,
                                        duration=500)
@@ -273,7 +296,7 @@ class MainMenu:
             bgSprite.FadeTo(0.6, 500)
             bgSprite.tag = "idleBackgroundSprite"
             CONST.foregroundSprites.add(bgSprite)
-
+        size = CONST.windowManager.getPixelSize()
         if not path.exists(
                 CONST.AudioManager.currentSong["folder"] + "/thumb.png"):
             songLogo = PygameSprite("defaultThumb.png", vector2(-480, 0),
@@ -281,21 +304,19 @@ class MainMenu:
                                     Positions.centreLeft)
             songLogo.tag = "idleOverlaySprites"
             CONST.foregroundSprites.add(songLogo)
-
-            songLogo.Scale(
-                460 / songLogo.image.get_width() * CONST.windowManager.getPixelSize())
+            songLogo.Scale(460 / songLogo.image.get_width() * size)
 
         else:
             songLogo = PygameSprite(
                 CONST.AudioManager.currentSong["folder"] + "/thumb.png",
-                vector2(-480, 0), SkinSource.absolute, Positions.centre,
+                vector2(-480, 5), SkinSource.absolute, Positions.centre,
                 Positions.centreLeft)
             songLogo.Fade(0)
             CONST.Scheduler.AddDelayed(200, songLogo.FadeTo, value=1,
                                        duration=500)
             songLogo.tag = "idleOverlaySprites"
             songLogo.Scale(
-                460 / songLogo.image.get_width() * CONST.windowManager.getPixelSize())
+                460 / songLogo.image.get_width() * size)
 
             songBg = PygameSprite(CONST.PixelWhite, vector2(-490, 0),
                                   SkinSource.local, Positions.centre,
@@ -322,8 +343,8 @@ class MainMenu:
         if len(npArtist) > 18:
             npArtist = npArtist[:16] + "..."
         songArtist = PygameText(npArtist, 50, FontStyle.regular,
-                                vector2(5, -110),
-                                Positions.centre, Positions.topLeft)
+                                vector2(5, -110), Positions.centre,
+                                Positions.topLeft)
         songArtist.tag = "idleOverlaySprites"
         CONST.foregroundSprites.add(songArtist)
         if not bgAlreadyPresent:
@@ -354,8 +375,8 @@ class MainMenu:
         minutes = str(
             int((CONST.AudioManager.currentSong["length"] / 1000 / 60) % 60))
         self.idleLeftText = PygameText("0", 20, FontStyle.regular,
-                                       vector2(5, 130),
-                                       Positions.centre, Positions.bottomLeft)
+                                       vector2(5, 130), Positions.centre,
+                                       Positions.bottomLeft)
         self.idleRightText = PygameText(minutes + ":" + seconds, 20,
                                         FontStyle.regular, vector2(275, 130),
                                         Positions.centre,
@@ -373,13 +394,13 @@ class MainMenu:
         CONST.foregroundSprites.add(self.idleClickText)
 
     def update(self):
-        if self.SongName != CONST.AudioManager.currentSong["artist"] + " | " + \
-                CONST.AudioManager.currentSong["name"]:
+        if self.SongName != CONST.AudioManager.currentSong["artist"] + \
+                " | " + CONST.AudioManager.currentSong["name"]:
             self.NowPlaying.Text(
                 CONST.AudioManager.currentSong["artist"] + " | " +
                 CONST.AudioManager.currentSong["name"])
-            self.SongName = CONST.AudioManager.currentSong["artist"] + " | " + \
-                            CONST.AudioManager.currentSong["name"]
+            self.SongName = CONST.AudioManager.currentSong["artist"] + \
+                            " | " + CONST.AudioManager.currentSong["name"]
             if self.idle:
                 self.setIdle()
                 seconds = str(
@@ -418,6 +439,7 @@ class MainMenu:
                 self.setIdle()
             self.Playbutton.Position(helper.SetParalax(70))
             self.exit.Position(helper.SetParalax(70))
+            self.setting.Position(helper.SetParalax(70))
             self.logoHero.position = helper.SetParalax(40)
             self.logoHero.Scale(
                 helper.getSyncValue(0.99, 1, EaseTypes.easeOut))
@@ -455,8 +477,6 @@ class MainMenu:
                 helper.GameQuit()
             if event.type == pygame.KEYDOWN:
                 if not self.Transition:
-                    if event.key == K_F1:
-                        CONST.Logger.debug("F1 (prev) Not implemented")
                     if event.key == K_F2:
                         CONST.AudioManager.Pause()
                     if event.key == K_F3:
