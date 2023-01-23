@@ -343,6 +343,106 @@ class Gameplay:
     def updateScore(self):
         self.ScoreIndicator.Text(str(self.score))
 
+    def Key1(self, holding):
+        if holding and not self.key1Holt:
+            self.upperOv.ClearTransformations()
+            self.upperOv.Fade(1)
+            CONST.AudioManager.play(self.touchSound)
+            self.handleKey1()
+            self.key1Holt = True
+        if not holding and self.key1Holt:
+            self.upperOv.FadeTo(0, 200)
+            self.key1Holt = False
+
+    def Key2(self, holding):
+        if holding and not self.key2Holt:
+            self.lowerOv.ClearTransformations()
+            self.lowerOv.Fade(1)
+            CONST.AudioManager.play(self.touchSound)
+            self.handleKey2()
+            self.key2Holt = True
+        if not holding and self.key2Holt:
+            self.lowerOv.FadeTo(0, 200)
+            self.key2Holt = False
+
+    def handleKey1(self):
+        if len(self.upperSprites) > 0:
+            spriteToHandle = self.upperSprites[0]
+            delay = spriteToHandle.time - pygame.mixer.music.get_pos()
+
+            if delay < 0:
+                late = True
+            else:
+                late = False
+
+            if abs(delay) > int(self.od) * 3:
+                return
+            self.unstableRate.append(delay)
+            CONST.AudioManager.play(self.hitSound)
+            spriteToHandle.Hit()
+            self.upperSprites.pop(0)
+            self.combo += 1
+
+            if abs(delay) < int(self.od):
+                self.updateCombo(3)
+                self.score += 300 * self.combo
+                self.accList.append(100)
+                self.life += self.hp
+
+            elif abs(delay) < int(self.od) * 2:
+                self.updateCombo(2)
+                self.score += 100 * self.combo
+                self.accList.append(66)
+                self.life += self.hp / 2
+
+            elif abs(delay) <= int(self.od) * 3:
+                self.updateCombo(1)
+                self.score += 50 * self.combo
+                self.accList.append(33)
+                self.life += self.hp / 3
+
+            self.updateScore()
+
+    def handleKey2(self):
+        if len(self.lowerSprites) > 0:
+
+            spriteToHandle = self.lowerSprites[0]
+            delay = spriteToHandle.time - pygame.mixer.music.get_pos()
+
+            if delay < 0:
+                late = True
+            else:
+                late = False
+
+            if abs(delay) > int(self.od) * 3:
+                return
+
+            self.unstableRate.append(delay)
+            CONST.AudioManager.play(self.hitSound)
+            spriteToHandle.Hit()
+            self.lowerSprites.pop(0)
+            self.combo += 1
+
+            if abs(delay) < int(self.od):
+                self.updateCombo(3)
+                self.score += 300 * self.combo
+                self.accList.append(100)
+                self.life += self.hp
+
+            elif abs(delay) < int(self.od) * 2:
+                self.updateCombo(2)
+                self.score += 100 * self.combo
+                self.accList.append(66)
+                self.life += self.hp / 2
+
+            elif abs(delay) <= int(self.od) * 3:
+                self.updateCombo(1)
+                self.score += 50 * self.combo
+                self.accList.append(33)
+                self.life += self.hp / 3
+
+            self.updateScore()
+
     @property
     def isPausing(self):
         try:
@@ -408,3 +508,28 @@ class Gameplay:
         elif not self.isPausing and self.paused:
             self.paused = False
             CONST.Background.FadeTo(0.1, 400, EaseTypes.easeInOut)
+
+    def dispose(self):
+        for sprite in CONST.foregroundSprites.sprites:
+            sprite.FadeTo(0, 400)
+
+    def HandleEvents(self, events):
+        keys = pygame.key.get_pressed()
+        if not self.failed and not self.finished:
+
+            if keys[K_d] or keys[K_f]:
+                self.Key1(True)
+            else:
+                self.Key1(False)
+
+            if keys[K_j] or keys[K_KP4]:
+                self.Key2(True)
+            else:
+                self.Key2(False)
+
+        if keys[K_ESCAPE] and not self.finished:
+            CONST.MenuManager.ChangeMenu(type=Menus.SongSelection)
+
+        for event in events:
+            if event.type == pygame.QUIT and not self.finished:
+                CONST.MenuManager.ChangeMenu(type=Menus.SongSelection)
