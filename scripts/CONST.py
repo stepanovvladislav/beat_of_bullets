@@ -20,6 +20,7 @@ cache = None
 clock = None
 MenuManager = None
 AudioManager = None
+AudioMeter = None
 enemy = None
 db = None
 PixelWhite = "pixel.png"

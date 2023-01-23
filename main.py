@@ -1,3 +1,6 @@
+########################################################
+# Main game script, used to be run within nothing else #
+########################################################
 import ctypes
 import sys
 import time
@@ -14,12 +17,11 @@ from scripts.main.database import Db
 from scripts.main.log import Log
 from scripts.main.pygameElements import PygameText, PygameSprite
 from scripts.main.thread import Scheduler
-from scripts.manager.audio import AudioManager
-from scripts.manager.cursor import CursorManager
+from scripts.manager.audio import AudioManager, AudioMeter
 from scripts.manager.menu import MenuManager
+from scripts.manager.cursor import CursorManager
 
 if __name__ == "__main__":
-
     CONST.Config = Config()
     CONST.db = Db()
 
@@ -33,6 +35,7 @@ if __name__ == "__main__":
     CONST.windowManager.height = ht
     CONST.windowManager.heightScaled = ht / CONST.windowManager.getPixelSize()
     CONST.windowManager.widthScaled = wd / CONST.windowManager.getPixelSize()
+    print(CONST.windowManager.heightScaled, CONST.windowManager.widthScaled)
     CONST.Scheduler = Scheduler()
 
     flags = HWSURFACE | DOUBLEBUF | HWACCEL | NOFRAME
@@ -50,22 +53,25 @@ if __name__ == "__main__":
                               SkinSource.local,
                               Positions.centre, Positions.centre)
     backgroundScale = CONST.windowManager.width / Background.image.get_width()
-    Background.Scale(backgroundScale * 1.3)
+    Background.Scale(backgroundScale * 1.3)  # for the parralax to work
     cursor = CursorManager()
     CONST.cursor = cursor
 
     CONST.backgroundSprites.add(Background)
 
     CONST.clock = pygame.time.Clock()
-    pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0),
-                            (0, 0, 0, 0, 0, 0, 0, 0))
+    pygame.mouse.set_cursor((8, 8), (0, 0), (0, 0, 0, 0, 0, 0, 0, 0), (
+        0, 0, 0, 0, 0, 0, 0,0))
     Background.posMult = -1
     Background.posMultY = -1
     CONST.Background = Background
 
     CONST.MenuManager.ChangeMenu(Menus.MainMenu)
+    CONST.AudioManager.PlayMusic("/data/files/intro")
 
     CONST.LastActive = time.time() * 1000
+
+    CONST.AudioMeter = AudioMeter()
 
     fpsCounterBg = PygameSprite(CONST.PixelWhite, vector2(0, 0),
                                 SkinSource.local,
@@ -107,8 +113,9 @@ if __name__ == "__main__":
                 fpsCounter.FadeTo(0, 500)
                 fpsCounterBg.FadeTo(0, 500)
                 timeSpike = False
-            # Update frame behind background
+
             CONST.surface.fill((0, 0, 0))
+            CONST.AudioMeter.Update()
             cursor.updateCursorPos()
             CONST.backgroundSprites.Position(helper.SetParalax(50).x,
                                              helper.SetParalax(50).y)
@@ -119,6 +126,10 @@ if __name__ == "__main__":
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button in (1, 2, 3):
                         cursor.onClick()
+                    if event.button == 4:
+                        CONST.AudioMeter.ChangeVolume(True)
+                    if event.button == 5:
+                        CONST.AudioMeter.ChangeVolume(False)
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button in (1, 2, 3):
                         cursor.onRelease()
@@ -137,12 +148,8 @@ if __name__ == "__main__":
         error.raiseError(e)
         pygame.quit()
         if not CONST.Debug:
-            ctypes.windll.user32.MessageBoxW(0, "BoB encountered an Error and "
-                                                "couldn't continue "
-                                                "Working\n\n" +
-                                             traceback.format_exc() +
-                                             "\n\nSee logs for further "
-                                             "informations",
+            ctypes.windll.user32.MessageBoxW(0,
+                                             "BoB encountered an Error and couldn't continue Working\n\n" + traceback.format_exc() + "\n\nSee logs for further informations",
                                              "BoB - Crash", 0)
 
     pygame.quit()

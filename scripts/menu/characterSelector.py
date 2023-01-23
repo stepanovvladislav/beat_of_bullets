@@ -25,6 +25,7 @@ class CharacterSelector:
         self.opttext = None
         self.NowPlaying = None
         self.isMouseDown = None
+        self.disposeTime = 400
 
         self.SoundHover = CONST.AudioManager.loadSound("button-hover.wav",
                                                        SkinSource.local)
