@@ -92,7 +92,7 @@ isQuitting = False
 
 def GameQuit():
     global isQuitting
-    from pygameElements import PygameText
+    from scripts.main.pygameElements import PygameText
     if isQuitting:
         InstantQuit()
         return

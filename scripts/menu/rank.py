@@ -170,6 +170,12 @@ class RankingPanel:
             lSprite.Fade(0.2)
             CONST.foregroundSprites.add(lSprite)
 
+    def update(self):
+        pass
+
+    def dispose(self):
+        pass
+
     def HandleEvents(self, events):
         keys = pygame.key.get_pressed()
 

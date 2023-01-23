@@ -859,17 +859,29 @@ class PygameText:
 
 
 class PygameSprite:
+    """The main sprite class to make things more easier"""
 
     def __init__(self, filename, position, skinSource, field, origin,
                  color=Color(255, 255, 255, 255), clock=Clocks.game,
                  load=True):
+        """
+        :param filename: the filename of the file (relative to skinSource)
+        :param position: the Origin position of the sprite (relative to the field and origin)
+        :param skinSource: SkinSource is the directory of the sprite,
+            user = Take from the user skin, if not present, take from local SkinSource
+            local = Take from the dir /data/sprites/<filename>
+        :param field: Anchor of the sprite, where should it be placed on the screen
+        :param origin: the origin of the sprite, if the (0,0) is on the top or the bottom of the sprite, or even center !
+        :param color: Color of the sprite, act as a Multiplier mask on the sprite (useful for glob.PixelWhite to get a color)
+        :param clock: How the transformations should be applied
+        :param load: is the sprite should be directly loaded, mainly used in game to use the same object instead of overloading
+            the ram with copy of same object
+        """
         if load:
             if skinSource == SkinSource.user and path.exists(
-                    CONST.currentDirectory + "/.user/skins/" +
-                    CONST.currentSkin + "/" + filename):
+                    CONST.currentDirectory + "/.user/skins/" + CONST.currentSkin + "/" + filename):
                 self.image = pygame.image.load(
-                    CONST.currentDirectory + "/.user/skins/" +
-                    CONST.currentSkin + "/" + filename)
+                    CONST.currentDirectory + "/.user/skins/" + CONST.currentSkin + "/" + filename)
             elif skinSource == SkinSource.absolute:
                 self.image = pygame.image.load(filename)
             else:
@@ -910,7 +922,9 @@ class PygameSprite:
             height = self.image.get_height()
             self.srcImg = self.image.convert_alpha()
             self.unBlendedImg = self.image.convert_alpha()
-            colorR, colorG, colorB = self.color.r, self.color.g, self.color.b
+            colorR = self.color.r
+            colorG = self.color.g
+            colorB = self.color.b
             colorA = self.color.a
             self.srcImg.fill((colorR, colorG, colorB, colorA),
                              special_flags=pygame.BLEND_RGBA_MULT)
@@ -923,6 +937,7 @@ class PygameSprite:
             self.unBlendedImg = None
 
     def loadFrom(self, other):
+        """Used to use this sprite from another sprite as reference, and avoiding ram overloading, but remind that any transformaiton except position change will result to a copy of the sprite"""
         self.srcImg = other.srcImg
         self.unBlendedImg = other.unBlendedImg
         self.image = other.image
@@ -963,58 +978,100 @@ class PygameSprite:
                 onClick[0](**onClick[1])
 
     def onHover(self, function, **kwargs):
+        """
+        (can be called multiple times)
+        Add a task to do when sprite is enabled and just got hovered
+        :param function: Actual function (DO NOT CALL IT, just put self.thing, NOT self.thing())
+        :param kwargs: Add as many as arguments for the function you pointed before
+        """
         self.onhover.append([function, kwargs])
 
     def disable(self):
+        """
+        Disable any transition and every input if enabled
+        """
         self.enabled = False
         self.image.set_alpha(int((self.alpha / 4) * 255))
         self.HiddenColor(
             Color(self.color.r * 0.3, self.color.g * 0.3, self.color.b * 0.3))
 
     def enable(self):
+        """
+        Enable any transition and every input if disabled
+        """
         self.enabled = True
         self.image.set_alpha(self.alpha)
         self.HiddenColor(self.color)
 
     def onHoverLost(self, function, **kwargs):
+        """
+        (can be called multiple times)
+        Add a task to do when sprite is enabled and just lost hover
+        :param function: Actual function (DO NOT CALL IT, just put self.thing, NOT self.thing())
+        :param kwargs: Add as many as arguments for the function you pointed before
+        """
         self.onhoverlost.append([function, kwargs])
 
     def onClick(self, function, **kwargs):
+        """
+        (can be called multiple times)
+        Add a task to do when sprite is clicked on
+        :param function: Actual function (DO NOT CALL IT, just put self.thing, NOT self.thing())
+        :param kwargs: Add as many as arguments for the function you pointed before
+        """
         self.onclick.append([function, kwargs])
 
     def Rotate(self, deg):
+        """
+        Rotate the sprite (must be done after scaling or color change)
+        :param deg: rotation deg from 1 to 360
+        """
         self.rotation = deg
         self.image = pygame.transform.rotate(self.image, deg)
         self.UpdateStats(True)
 
     def borderBounds(self, borderRadius):
+        """
+        :param borderRadius: BorderRadius of the sprite, refer to css border-radius
+        """
         self.image = pygame.image.fromstring(
             helper.cornerBounds(self, borderRadius), self.image.get_size(),
             "RGBA").convert_alpha()
 
     def crop(self, x, y):
-        size = CONST.windowManager.getPixelSize()
+        """
+        Image cropping (must be done after scaling) (will take the center of the image as origin)
+        :param x: Width of the image
+        :param y: Height of the image
+        """
         offset = vector2(0, 0)
         width = self.unBlendedImg.get_width()
         height = self.unBlendedImg.get_height()
         self.Scale(1920 / width)
         self.image = self.image.subsurface((width / 2, height / 2 - (y / 2),
-                                            x * size,
-                                            y * size))
+                                            x * CONST.windowManager.getPixelSize(),
+                                            y * CONST.windowManager.getPixelSize()))
         self.UpdateStats()
 
     def Scale(self, x):
-        size = CONST.windowManager.getPixelSize()
+        """
+        Image rescaling
+        :param x: Scale factor
+        """
         self.scale = x
         width = self.srcImg.get_width()
         height = self.srcImg.get_height()
         self.image = pygame.transform.scale(self.srcImg, (
-            int(width * size * x * self.vectorScale.x),
-            int(height * size * x * self.vectorScale.y)))
+            int(width * CONST.windowManager.getPixelSize() * x * self.vectorScale.x),
+            int(height * CONST.windowManager.getPixelSize() * x * self.vectorScale.y)))
         self.image.set_alpha(255 * self.alpha)
         self.UpdateStats()
 
     def Color(self, color):
+        """
+        Multiply mask Color (will replace other Color transformations)
+        :param color: Color of the sprite
+        """
         self.srcImg = self.unBlendedImg.convert_alpha()
         self.color = color
         self.srcImg.fill((color.r, color.g, color.b, color.a),
@@ -1022,12 +1079,20 @@ class PygameSprite:
         self.Scale(self.scale)
 
     def HiddenColor(self, color):
+        """
+        Same as Color, but will not register color in variable, so can be cancelled with obj.Color(obj.color)
+        :param color: Color of the sprite
+        """
         self.srcImg = self.unBlendedImg.convert_alpha()
         self.srcImg.fill((color.r, color.g, color.b, color.a),
                          special_flags=pygame.BLEND_RGBA_MULT)
         self.Scale(self.scale)
 
     def FillColor(self, Color):
+        """
+        Will add a normal filter on the sprite, act like Color
+        :param color: Color of the sprite
+        """
         self.Color(self.color)
         s = pygame.Surface((self.srcImg.get_width(), self.srcImg.get_height()))
         s.set_alpha(Color.a)
@@ -1036,6 +1101,10 @@ class PygameSprite:
         self.Scale(self.scale)
 
     def AlphaMask(self, mask):
+        """
+        Allow Multiply Masking, mainly used for alpha masking but can be use for everything, must be put after Scaling
+        :param mask: mask to apply to the sprite (relative to /data/sprites/masks/<mask>)
+        """
         mask = CONST.currentDirectory + "/data/sprites/masks/" + mask
         mask = pygame.image.load(mask)
         mask = pygame.transform.scale(mask, (
@@ -1043,18 +1112,21 @@ class PygameSprite:
         self.image.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
 
     def TopGradiant(self, color, style):
-        src = "/data/sprites/gradiants/gradiant-"
+        """
+        Apply gradiant to the image from top to bottom
+        :param color: Color of the gradiant
+        :param style: /data/sprites/gradiants/gradiant-<style>.png
+        """
         try:
-
             gradiant = pygame.image.load(
-                CONST.currentDirectory + src + style + ".png").convert_alpha()
+                CONST.currentDirectory + "/data/sprites/gradiants/gradiant-" + style + ".png").convert_alpha()
         except:
             gradiant = pygame.image.load(
-                CONST.currentDirectory + src + "full.png").convert_alpha()
+                CONST.currentDirectory + "/data/sprites/gradiants/gradiant-full.png").convert_alpha()
 
         gradiant = pygame.transform.scale(gradiant, (
             self.srcImg.get_height(), self.srcImg.get_width()))
-        gradiant.fill((color.r, color.g, color.b, color.a),
+        gradiant.fill(((color.r, color.g, color.b, color.a)),
                       special_flags=pygame.BLEND_RGBA_MULT)
         gradiant = pygame.transform.rotate(gradiant, -90)
         self.Color(self.color)
@@ -1062,17 +1134,21 @@ class PygameSprite:
         self.Scale(self.scale)
 
     def BottomGradiant(self, color, style):
-        src = "/data/sprites/gradiants/gradiant-"
+        """
+        Apply gradiant to the image from bottom to top
+        :param color: Color of the gradiant
+        :param style: /data/sprites/gradiants/gradiant-<style>.png
+        """
         try:
             gradiant = pygame.image.load(
-                CONST.currentDirectory + src + style + ".png").convert_alpha()
+                CONST.currentDirectory + "/data/sprites/gradiants/gradiant-" + style + ".png").convert_alpha()
         except:
             gradiant = pygame.image.load(
-                CONST.currentDirectory + src + "full.png").convert_alpha()
+                CONST.currentDirectory + "/data/sprites/gradiants/gradiant-full.png").convert_alpha()
 
         gradiant = pygame.transform.scale(gradiant, (
             self.srcImg.get_height(), self.srcImg.get_width()))
-        gradiant.fill((color.r, color.g, color.b, color.a),
+        gradiant.fill(((color.r, color.g, color.b, color.a)),
                       special_flags=pygame.BLEND_RGBA_MULT)
         gradiant = pygame.transform.rotate(gradiant, 90)
         self.Color(self.color)
@@ -1080,42 +1156,37 @@ class PygameSprite:
         self.Scale(self.scale)
 
     def VectorScale(self, vectorScale):
+        """
+        Allow Different Width/height Scaling, Useful for glob.WhitePixel to fill surfaces
+        :param vectorScale:
+        :return:
+        """
         self.vectorScale = vectorScale
         self.Scale(self.scale)
 
     def Fade(self, x):
+        """
+        Set global opacity of the sprite
+        :param x: 0 to 1 float opacity
+        """
         self.alpha = x
         self.image.set_alpha(255 * x)
 
     def MoveTo(self, x, y, duration, easing=EaseTypes.linear, loop=False):
-        if self.Clock == Clocks.game:
-            self.transformations["fade"]["beginTime"] = time.time() * 1000
-        else:
-            self.transformations["fade"][
-                "beginTime"] = pygame.mixer.music.get_pos()
-        if self.Clock == Clocks.game:
-            self.transformations["fade"][
-                "endTime"] = time.time() * 1000 + duration
-        else:
-            self.transformations["fade"][
-                "endTime"] = pygame.mixer.music.get_pos() + duration
+        self.transformations["position"][
+            "beginTime"] = time.time() * 1000 if self.Clock == Clocks.game else pygame.mixer.music.get_pos()
+        self.transformations["position"][
+            "endTime"] = time.time() * 1000 + duration if self.Clock == Clocks.game else pygame.mixer.music.get_pos() + duration
         self.transformations["position"]["beginValue"] = self.position
         self.transformations["position"]["endValue"] = vector2(x, y)
         self.transformations["position"]["easing"] = easing
         self.transformations["position"]["loop"] = loop
 
     def FadeTo(self, value, duration, easing=EaseTypes.linear, loop=False):
-        if self.Clock == Clocks.game:
-            self.transformations["fade"]["beginTime"] = time.time() * 1000
-        else:
-            self.transformations["fade"][
-                "beginTime"] = pygame.mixer.music.get_pos()
-        if self.Clock == Clocks.game:
-            self.transformations["fade"][
-                "endTime"] = time.time() * 1000 + duration
-        else:
-            self.transformations["fade"][
-                "endTime"] = pygame.mixer.music.get_pos() + duration
+        self.transformations["fade"][
+            "beginTime"] = time.time() * 1000 if self.Clock == Clocks.game else pygame.mixer.music.get_pos()
+        self.transformations["fade"][
+            "endTime"] = time.time() * 1000 + duration if self.Clock == Clocks.game else pygame.mixer.music.get_pos() + duration
         self.transformations["fade"]["beginValue"] = self.alpha
         self.transformations["fade"]["endValue"] = value
         self.transformations["fade"]["easing"] = easing
@@ -1123,17 +1194,10 @@ class PygameSprite:
 
     def FadeColorTo(self, color, duration, easing=EaseTypes.linear,
                     loop=False):
-        if self.Clock == Clocks.game:
-            self.transformations["colorFade"]["beginTime"] = time.time() * 1000
-        else:
-            self.transformations["colorFade"][
-                "beginTime"] = pygame.mixer.music.get_pos()
-        if self.Clock == Clocks.game:
-            self.transformations["colorFade"][
-                "endTime"] = time.time() * 1000 + duration
-        else:
-            self.transformations["colorFade"][
-                "endTime"] = pygame.mixer.music.get_pos() + duration
+        self.transformations["colorFade"][
+            "beginTime"] = time.time() * 1000 if self.Clock == Clocks.game else pygame.mixer.music.get_pos()
+        self.transformations["colorFade"][
+            "endTime"] = time.time() * 1000 + duration if self.Clock == Clocks.game else pygame.mixer.music.get_pos() + duration
         self.transformations["colorFade"]["beginValue"] = self.color
         self.transformations["colorFade"]["endValue"] = color
         self.transformations["colorFade"]["easing"] = easing
@@ -1141,35 +1205,20 @@ class PygameSprite:
 
     def VectorScaleTo(self, scale, duration, easing=EaseTypes.linear,
                       loop=False):
-        if self.Clock == Clocks.game:
-            self.transformations["VectorScale"][
-                "beginTime"] = time.time() * 1000
-        else:
-            self.transformations["VectorScale"][
-                "beginTime"] = pygame.mixer.music.get_pos()
-        if self.Clock == Clocks.game:
-            self.transformations["VectorScale"][
-                "endTime"] = time.time() * 1000 + duration
-        else:
-            self.transformations["VectorScale"][
-                "endTime"] = pygame.mixer.music.get_pos() + duration
+        self.transformations["VectorScale"][
+            "beginTime"] = time.time() * 1000 if self.Clock == Clocks.game else pygame.mixer.music.get_pos()
+        self.transformations["VectorScale"][
+            "endTime"] = time.time() * 1000 + duration if self.Clock == Clocks.game else pygame.mixer.music.get_pos() + duration
         self.transformations["VectorScale"]["beginValue"] = self.vectorScale
         self.transformations["VectorScale"]["endValue"] = scale
         self.transformations["VectorScale"]["easing"] = easing
         self.transformations["VectorScale"]["loop"] = loop
 
     def ScaleTo(self, scale, duration, easing=EaseTypes.linear, loop=False):
-        if self.Clock == Clocks.game:
-            self.transformations["scale"]["beginTime"] = time.time() * 1000
-        else:
-            self.transformations["scale"][
-                "beginTime"] = pygame.mixer.music.get_pos()
-        if self.Clock == Clocks.game:
-            self.transformations["scale"][
-                "endTime"] = time.time() * 1000 + duration
-        else:
-            self.transformations["scale"][
-                "endTime"] = pygame.mixer.music.get_pos() + duration
+        self.transformations["scale"][
+            "beginTime"] = time.time() * 1000 if self.Clock == Clocks.game else pygame.mixer.music.get_pos()
+        self.transformations["scale"][
+            "endTime"] = time.time() * 1000 + duration if self.Clock == Clocks.game else pygame.mixer.music.get_pos() + duration
         self.transformations["scale"]["beginValue"] = self.scale
         self.transformations["scale"]["endValue"] = scale
         self.transformations["scale"]["easing"] = easing
@@ -1238,23 +1287,20 @@ class PygameSprite:
         self.effectivePosition = vector2(self.offset.x, self.offset.y)
 
     def draw(self):
-        ep = self.effectivePosition
-        op = self.originPosition
         if self.enabled:
             beginRect = vector2((
-                    ep.x + CONST.windowManager.getPixelSize() *
-                    ((op.x + self.position.x) * self.posMult)),
-                ep.y + CONST.windowManager.getPixelSize() *
-                ((op.y + self.position.y) * self.posMultY))
+                    self.effectivePosition.x + CONST.windowManager.getPixelSize() *
+                    ((
+                             self.originPosition.x + self.position.x) * self.posMult)),
+                self.effectivePosition.y + CONST.windowManager.getPixelSize() *
+                ((self.originPosition.y + self.position.y) * self.posMultY))
             endRect = vector2(
                 beginRect.x + (self.image.get_width()),
                 beginRect.y + (self.image.get_height())
             )
-            actuallyHover = (((CONST.cursorPos.x > beginRect.x) and
-                              (CONST.cursorPos.x < endRect.x)) and (
-                                     (CONST.cursorPos.y > beginRect.y)
-                                     and (CONST.cursorPos.y < endRect.y))
-                             and self.alpha > 0)
+            actuallyHover = (
+                                    CONST.cursorPos.x > beginRect.x and CONST.cursorPos.x < endRect.x) and (
+                                    CONST.cursorPos.y > beginRect.y and CONST.cursorPos.y < endRect.y) and self.alpha > 0
             if actuallyHover and not self.isonHover:
                 self.isonHover = True
                 self.__onHover__()
@@ -1364,8 +1410,7 @@ class PygameSprite:
                     "beginValue"].y
                 endValueY = self.transformations["VectorScale"]["endValue"].y
                 easing = self.transformations["VectorScale"]["easing"]
-                if ((self.vectorScale.x == endValueX) and
-                        (self.vectorScale.y == endValueY)):
+                if self.vectorScale.x == endValueX and self.vectorScale.y == endValueY:
                     if self.transformations["VectorScale"]["loop"]:
                         duration = self.transformations["VectorScale"][
                                        "endTime"] - \
@@ -1412,9 +1457,7 @@ class PygameSprite:
                 endValueB = self.transformations["colorFade"]["endValue"].b
 
                 easing = self.transformations["colorFade"]["easing"]
-                if ((self.color.r == endValueR) and
-                        (self.color.g == endValueG) and
-                        (self.color.b == endValueB)):
+                if self.color.r == endValueR and self.color.g == endValueG and self.color.b == endValueB:
                     if self.transformations["colorFade"]["loop"]:
                         duration = self.transformations["colorFade"][
                                        "endTime"] - \
@@ -1462,8 +1505,7 @@ class PygameSprite:
                 beginValueY = self.transformations["position"]["beginValue"].y
                 endValueY = self.transformations["position"]["endValue"].y
                 easing = self.transformations["position"]["easing"]
-                if ((self.position.x == endValueX) and
-                        (self.position.y == endValueY)):
+                if self.position.x == endValueX and self.position.y == endValueY:
                     if self.transformations["position"]["loop"]:
                         duration = self.transformations["position"][
                                        "endTime"] - \
@@ -1498,7 +1540,10 @@ class PygameSprite:
         self.UpdateStats()
         if self.alpha != 0:
             CONST.surface.blit(self.image,
-                               (ep.x + CONST.windowManager.getPixelSize() *
-                                ((op.x + self.position.x) * self.posMult),
-                                ep.y + CONST.windowManager.getPixelSize() *
-                                ((op.y + self.position.y) * self.posMultY)))
+                               (
+                                   self.effectivePosition.x + CONST.windowManager.getPixelSize() *
+                                   ((
+                                            self.originPosition.x + self.position.x) * self.posMult),
+                                   self.effectivePosition.y + CONST.windowManager.getPixelSize() *
+                                   ((
+                                            self.originPosition.y + self.position.y) * self.posMultY)))
