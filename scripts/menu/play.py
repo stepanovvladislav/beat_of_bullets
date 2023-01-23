@@ -319,6 +319,64 @@ class Gameplay:
         else:
             CONST.AudioManager.Unpause()
 
+    def Finish(self):
+        if self.failed or self.finished:
+            return
+
+        self.finished = True
+
+        CONST.backgroundSprites.sprites[0].FadeTo(1, 400)
+        for sprite in CONST.foregroundSprites.sprites:
+            sprite.ClearTransformations()
+            sprite.FadeTo(0, 400)
+
+        self.accList.pop(0)
+
+        accuracy = round(sum(self.accList) / len(self.accList), 2)
+        fullCombo = self.accList.count(0) == 0
+        missCount = self.accList.count(0)
+        mehCount = self.accList.count(33)
+        goodCount = self.accList.count(66)
+        perfectCount = self.accList.count(100)
+
+        unstableRate = [[min(self.unstableRate),
+                         round(sum(self.unstableRate) / len(self.unstableRate),
+                               2), max(self.unstableRate)], self.unstableRate]
+
+        if perfectCount / len(self.accList) * 100 > 93:
+            rankLetter = "S" if fullCombo else "A"
+        elif perfectCount / len(self.accList) * 100 > 86:
+            rankLetter = "A" if fullCombo else "B"
+        elif perfectCount / len(self.accList) * 100 > 70:
+            rankLetter = "B" if fullCombo else "C"
+        else:
+            rankLetter = "C" if fullCombo else "D"
+
+        data = {
+            "accuracy": accuracy,
+            "combo": self.maxCombo,
+            "fullCombo": fullCombo,
+            "xmgpRatio": [missCount, mehCount, goodCount, perfectCount],
+            "unstableRate": unstableRate,
+            "score": self.score,
+            "rank": rankLetter,
+            "mapOD": self.od
+        }
+        CONST.cache = data
+
+        id = int(
+            CONST.db.fetch("SELECT count(*) as count FROM scores")[
+                "count"]) + 1
+
+        beatmapID = CONST.AudioManager.currentSong["id"]
+        diffStr = ["normal", "hard", "insane"][int(CONST.Difficulty)]
+
+        CONST.db.execute(
+            f"INSERT INTO scores (`id`, `username`, `mapid`, `difficulty`, `score`, `accuracy`, `consistency`, `comboMax`, `rank`, `countPerf`, `countGood`, `countMeh`, `countMiss`) VALUES ('{id}','user','{beatmapID}','{diffStr}','{self.score}','{accuracy}','{(unstableRate[0][1])}','{self.maxCombo}','{rankLetter}','{perfectCount}','{goodCount}','{mehCount}','{missCount}');")
+
+        CONST.Scheduler.AddDelayed(1000, CONST.MenuManager.ChangeMenu,
+                                   type=Menus.Ranking)
+
     def updateCombo(self, hit):
         self.comboIndicatorOv.ClearTransformations()
         self.comboIndicator.ClearTransformations()
@@ -509,7 +567,8 @@ class Gameplay:
             self.paused = False
             CONST.Background.FadeTo(0.1, 400, EaseTypes.easeInOut)
 
-    def dispose(self):
+    @staticmethod
+    def dispose():
         for sprite in CONST.foregroundSprites.sprites:
             sprite.FadeTo(0, 400)
 
