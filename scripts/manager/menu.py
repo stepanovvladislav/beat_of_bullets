@@ -4,7 +4,7 @@ from scripts.menu.mainMenu import MainMenu
 from scripts.menu.play import Gameplay
 from scripts.menu.rank import RankingPanel
 from scripts.menu.songSelection import SongSelection
-from scripts.menu.characterSelector import CharacterSelection
+from scripts.menu.characterSelector import CharacterSelector
 
 
 class MenuManager:
@@ -35,7 +35,7 @@ class MenuManager:
         elif type == Menus.Ranking:
             return RankingPanel()
         elif type == Menus.CharacterSelection:
-            return CharacterSelection()
+            return CharacterSelector()
 
     def HandleEvents(self, events):
         self.activeMenu.HandleEvents(events)

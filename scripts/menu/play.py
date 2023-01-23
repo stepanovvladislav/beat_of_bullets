@@ -253,6 +253,21 @@ class Gameplay:
         self.LowerSprite.Scale(0.2)
         CONST.Scheduler.AddNow(self.loadElements)
 
+    def Fail(self):
+        if self.finished:
+            return
+        self.failed = True
+        CONST.AudioManager.play(self.failSound)
+        CONST.AudioManager.Pause(False)
+        for sprite in CONST.foregroundSprites.sprites:
+            sprite.ClearTransformations()
+            sprite.FadeTo(0, 200)
+        self.failQuit.enabled = True
+        self.failRetry.enabled = True
+        self.failOverlay.FadeTo(1, 200)
+        self.failRetry.FadeTo(1, 200)
+        self.failQuit.FadeTo(1, 200)
+
     def loadElements(self):
 
         if not self.isLoading:
@@ -303,3 +318,93 @@ class Gameplay:
                 "Good Luck, Have Fun", 1000, NotificationType.Info).show)
         else:
             CONST.AudioManager.Unpause()
+
+    def updateCombo(self, hit):
+        self.comboIndicatorOv.ClearTransformations()
+        self.comboIndicator.ClearTransformations()
+        if self.combo > self.maxCombo:
+            self.maxCombo = self.combo
+        fadeTime = 300
+
+        hitColor = [Color(255, 0, 0), Color(255, 106, 0), Color(75, 235, 30),
+                    Color(48, 248, 255)][hit]
+        self.comboIndicator.Text(str(self.combo) + "x")
+        self.comboIndicator.Color(hitColor)
+        self.comboIndicator.FadeColorTo(Color(255, 255, 255), 500)
+
+        self.comboIndicatorOv.Text(str(self.combo) + "x")
+        self.comboIndicatorOv.Color(hitColor)
+        self.comboIndicatorOv.FadeColorTo(Color(255, 255, 255), 500)
+        self.comboIndicatorOv.Scale(1.5)
+        self.comboIndicatorOv.ScaleTo(1, fadeTime, EaseTypes.easeIn)
+        self.comboIndicatorOv.Fade(0.7)
+        self.comboIndicatorOv.FadeTo(0, fadeTime, EaseTypes.easeIn)
+
+    def updateScore(self):
+        self.ScoreIndicator.Text(str(self.score))
+
+    @property
+    def isPausing(self):
+        try:
+            return not (self.upperSprites[
+                            0].time - pygame.mixer.music.get_pos() < 3000 or
+                        self.lowerSprites[
+                            0].time - pygame.mixer.music.get_pos() < 3000)
+        except:
+            return False
+
+    def updateLife(self):
+        if not self.finished and not self.isLoading and not \
+                pygame.mixer.music.get_pos() < 30 and not self.isPausing:
+            self.life -= self.hp / 100
+            self.life = min(self.life, 100)
+            self.life = max(self.life, 0)
+            self.lifeBar.VectorScale(vector2(self.life * 19.2, 5))
+            if self.life == 0 and not self.failed:
+                self.Fail()
+
+    def update(self):
+        currentWidth = (pygame.mixer.music.get_pos() /
+                        CONST.AudioManager.currentSong["length"]) * \
+                       CONST.windowManager.widthScaled
+
+        self.progressBar.VectorScale(vector2(currentWidth, 5))
+        seconds = str(int((pygame.mixer.music.get_pos() / 1000) % 60))
+
+        if len(seconds) == 1:
+            seconds = "0" + seconds
+
+        minutes = str(int((pygame.mixer.music.get_pos() / 1000 / 60) % 60))
+        self.LengthTime.Text("{}:{}".format(minutes, seconds))
+        self.accBar.Fade(helper.getSyncValue(0.8, 0.5, EaseTypes.easeOut))
+        self.updateLife()
+        if len(self.upperSprites) > 0 and self.upperSprites[
+            0].time - pygame.mixer.music.get_pos() < 0 - self.od * 3 and \
+                pygame.mixer.music.get_pos() > 30:
+            self.upperSprites[0].Miss()
+            self.life -= self.hp
+            self.upperSprites.pop(0)
+            self.combo = 0
+            self.updateCombo(0)
+            self.accList.append(0)
+
+        if len(self.lowerSprites) > 0 and self.lowerSprites[
+            0].time - pygame.mixer.music.get_pos() < 0 - self.od * 3 and \
+                pygame.mixer.music.get_pos() > 30:
+            self.lowerSprites[0].Miss()
+            self.life -= self.hp
+            self.lowerSprites.pop(0)
+            self.combo = 0
+            self.updateCombo(0)
+            self.accList.append(0)
+
+        if pygame.mixer.music.get_pos() >= self.ClosingTime and \
+                self.ClosingTime != 0 and not self.finished and \
+                not self.isLoading:
+            self.Finish()
+        if self.isPausing and not self.paused:
+            self.paused = True
+            CONST.Background.FadeTo(0.7, 400, EaseTypes.easeInOut)
+        elif not self.isPausing and self.paused:
+            self.paused = False
+            CONST.Background.FadeTo(0.1, 400, EaseTypes.easeInOut)
