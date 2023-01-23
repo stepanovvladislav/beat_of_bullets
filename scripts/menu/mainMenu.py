@@ -92,10 +92,10 @@ class MainMenu:
         self.setting = setting
         self.setting.onHover(CONST.AudioManager.play,
                              sound=self.SoundHover)
-
         self.setting.onClick(menu, type=Menus.SettingsMenu)
         self.setting.onClick(CONST.AudioManager.play,
                              sound=self.SoundClick)
+        setting.disable()
         CONST.foregroundSprites.add(setting)
 
         button = PygameButton("Play", vector2(410, 200),

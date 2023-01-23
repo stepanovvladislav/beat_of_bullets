@@ -3,7 +3,6 @@ import os
 from scripts.main.data import *
 from scripts.manager.sprite import SpriteManager
 
-Debug = False
 Running = False
 
 Name = "BoB"
@@ -14,6 +13,7 @@ cursorPos = vector2(0, 0)
 UserEvents = {}
 currentDirectory = os.getcwd()
 surface = None
+Difficulty = None
 Config = None
 clock = None
 MenuManager = None

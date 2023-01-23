@@ -4,7 +4,7 @@ from pygame.locals import *
 from scripts import CONST
 from scripts.main import helper
 from scripts.main.data import *
-from scripts.main.pygameElements import PygameButton, PygameSprite
+from scripts.main.pygameElements import PygameButton, PygameSprite, PygameText
 
 
 class CharacterSelector:
@@ -20,6 +20,11 @@ class CharacterSelector:
         self.logoEnemy3 = None
         self.upperBar = None
         self.lowerBar = None
+        self.SongName = None
+        self.exit = None
+        self.opttext = None
+        self.NowPlaying = None
+        self.isMouseDown = None
 
         self.SoundHover = CONST.AudioManager.loadSound("button-hover.wav",
                                                        SkinSource.local)
@@ -27,6 +32,14 @@ class CharacterSelector:
                                                        SkinSource.local)
 
     def init(self):
+        CONST.Framerate = 30
+
+        try:
+            self.SongName = CONST.AudioManager.currentSong["artist"] + \
+                            " | " + CONST.AudioManager.currentSong["name"]
+        except Exception:
+            self.SongName = ""
+
         CONST.Framerate = 30
 
         upperBar = PygameSprite(CONST.PixelWhite, vector2(0, 0),
@@ -70,9 +83,8 @@ class CharacterSelector:
         self.playEnemy1 = PlayEnemy1
         self.playEnemy1.onHover(CONST.AudioManager.play, sound=self.SoundHover)
         CONST.foregroundSprites.add(PlayEnemy1)
-        CONST.enemy = '1'
         self.playEnemy1.onClick(CONST.MenuManager.ChangeMenu,
-                                type=Menus.SongSelection)
+                                type=Menus.SongSelection, enemy='1')
 
         PlayEnemy2 = PygameButton("Play2", vector2(400, 150),
                                   position=vector2(950, 950),
@@ -80,9 +92,8 @@ class CharacterSelector:
         self.playEnemy2 = PlayEnemy2
         self.playEnemy2.onHover(CONST.AudioManager.play, sound=self.SoundHover)
         CONST.foregroundSprites.add(PlayEnemy2)
-        CONST.enemy = '2'
         self.playEnemy2.onClick(CONST.MenuManager.ChangeMenu,
-                                type=Menus.SongSelection)
+                                type=Menus.SongSelection, enemy='2')
 
         PlayEnemy3 = PygameButton("Play3", vector2(400, 150),
                                   position=vector2(1550, 950),
@@ -90,11 +101,39 @@ class CharacterSelector:
         self.playEnemy3 = PlayEnemy3
         self.playEnemy3.onHover(CONST.AudioManager.play, sound=self.SoundHover)
         CONST.foregroundSprites.add(PlayEnemy3)
-        CONST.enemy = '3'
         self.playEnemy3.onClick(CONST.MenuManager.ChangeMenu,
-                                type=Menus.SongSelection)
+                                type=Menus.SongSelection, enemy='3')
+
+        NowPlaying = PygameText(self.SongName, 40, position=vector2(-100, -6),
+                                field=Positions.topRight,
+                                origin=Positions.topRight)
+        self.NowPlaying = NowPlaying
+        CONST.foregroundSprites.add(NowPlaying)
+
+        optbutton = PygameButton("", vector2(200, 50),
+                                 position=vector2(110, 1055),
+                                 color=Color(50, 100, 50))
+        self.exit = optbutton
+        self.exit.onHover(CONST.AudioManager.play, sound=self.SoundHover)
+        self.exit.onClick(CONST.MenuManager.ChangeMenu, type=Menus.MainMenu)
+        CONST.foregroundSprites.add(optbutton)
+
+        opttext = PygameText("Back", 40, position=vector2(50, 6),
+                             field=Positions.bottomLeft,
+                             origin=Positions.bottomLeft)
+        CONST.foregroundSprites.add(opttext)
+        self.opttext = opttext
+
 
     def update(self):
+        if self.SongName != CONST.AudioManager.currentSong["artist"] + \
+                " | " + CONST.AudioManager.currentSong["name"]:
+            self.NowPlaying.Text(
+                CONST.AudioManager.currentSong["artist"] + " | " +
+                CONST.AudioManager.currentSong["name"])
+            self.SongName = CONST.AudioManager.currentSong["artist"] + \
+                            " | " + CONST.AudioManager.currentSong["name"]
+
         self.logoEnemy1.position = helper.SetParalax(40)
         self.logoEnemy1.Scale(
             helper.getSyncValue(0.99, 1, EaseTypes.easeOut))
@@ -131,7 +170,10 @@ class CharacterSelector:
     def HandleEvents(self, events):
         for event in events:
             if event.type == pygame.QUIT:
-                helper.GameQuit()
+                CONST.MenuManager.ChangeMenu(Menus.MainMenu)
+            if event.type == pygame.KEYDOWN:
+                if event.key == K_ESCAPE:
+                    CONST.MenuManager.ChangeMenu(Menus.MainMenu)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button in (1, 2):
                     self.isMouseDown = True
