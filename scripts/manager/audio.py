@@ -10,7 +10,7 @@ from mutagen.mp3 import MP3
 
 from scripts import CONST
 from scripts.main.data import *
-from scripts.main.pygameElements import PygameSprite
+from scripts.main.pygameElements import PygameSprite, PygameText
 
 last = 0
 
@@ -41,7 +41,7 @@ class AudioManager:
         pygame.mixer.music.play(0)
         self.isPlaying = True
 
-    def PlayMusic(self, songFolder, Preview=False):
+    def PlayMusic(self, songFolder: str, Preview=False):
         songFolder = CONST.currentDirectory + songFolder
         pygame.mixer.music.load(songFolder + "/audio.mp3")
 
@@ -62,7 +62,7 @@ class AudioManager:
     def SeekPreview(self):
         pygame.mixer.music.play(start=self.currentSong["previewpoint"] / 1000)
 
-    def loadSound(self, filename, skinSource):
+    def loadSound(self, filename: str, skinSource: int):
         if skinSource == SkinSource.user and path.exists(
                 CONST.currentDirectory + "/.user/skins/" + CONST.currentSkin + "/" + filename):
             source = CONST.currentDirectory + "/.user/skins/" + CONST.currentSkin + "/" + filename
@@ -172,3 +172,74 @@ class AudioManager:
         beatLength = 60000 / bpm
         pos = pygame.mixer.music.get_pos()
         return int(((pos - offset) % beatLength)) / beatLength
+
+
+class AudioMeter:
+    def __init__(self):
+        self.active = False
+        self.lastActive = 0
+        self.background = PygameSprite(CONST.PixelWhite, vector2(0, 0),
+                                       SkinSource.local, Positions.centreRight,
+                                       Positions.centreRight, Color(0, 0, 0))
+        self.background.VectorScale(vector2(30, 600))
+        self.foreground = PygameSprite(CONST.PixelWhite, vector2(-13, 290),
+                                       SkinSource.local, Positions.centreRight,
+                                       Positions.bottomCentre,
+                                       Color(255, 204, 212))
+        self.text = PygameText("100%", 20, FontStyle.regular, vector2(10, 180),
+                               Positions.centreRight, Positions.centreRight)
+        self.foreground.VectorScale(vector2(10, CONST.volume * 580))
+
+    def Update(self):
+        if (time.time() * 1000) - self.lastActive > 3000 and self.active:
+            self.hide()
+            self.active = None
+
+    def ChangeVolume(self, up):
+        if not self.active:
+            self.show()
+            self.active = True
+        self.lastActive = time.time() * 1000
+        if up:
+            if CONST.volume <= 1:
+                if CONST.volume < 0.10:
+                    CONST.volume += 0.01
+                else:
+                    CONST.volume += 0.05
+                if CONST.volume > 1:
+                    CONST.volume = 1
+                CONST.AudioManager.setVolume(CONST.volume)
+        else:
+            if CONST.volume >= 0:
+                if CONST.volume < 0.10:
+                    CONST.volume -= 0.01
+                else:
+                    CONST.volume -= 0.05
+                if CONST.volume < 0:
+                    CONST.volume = 0
+                CONST.AudioManager.setVolume(CONST.volume)
+        self.foreground.VectorScaleTo(vector2(10, CONST.volume * 580), 100,
+                                      EaseTypes.easeOut)
+        self.text.Text(str(math.floor(CONST.volume * 100)) + "%")
+
+    def show(self):
+        self.background.Fade(0)
+        self.foreground.Fade(0)
+        self.text.Fade(0)
+        self.background.FadeTo(0.7, 200, EaseTypes.easeInOut)
+        self.foreground.FadeTo(1, 200, EaseTypes.easeInOut)
+        self.text.FadeTo(1, 200, EaseTypes.easeInOut)
+        CONST.overlaySprites.add(self.background)
+        CONST.overlaySprites.add(self.text)
+        CONST.overlaySprites.add(self.foreground)
+
+    def hide(self):
+        self.background.FadeTo(0, 200, EaseTypes.easeInOut)
+        self.foreground.FadeTo(0, 200, EaseTypes.easeInOut)
+        self.text.FadeTo(0, 200, EaseTypes.easeInOut)
+        CONST.Scheduler.AddDelayed(200, CONST.overlaySprites.remove,
+                                   sprite=self.background)
+        CONST.Scheduler.AddDelayed(200, CONST.overlaySprites.remove,
+                                   sprite=self.text)
+        CONST.Scheduler.AddDelayed(200, CONST.overlaySprites.remove,
+                                   sprite=self.foreground)
