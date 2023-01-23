@@ -10,7 +10,8 @@ from mutagen.mp3 import MP3
 
 from scripts import CONST
 from scripts.main.data import *
-from scripts.main.pygameElements import PygameSprite, PygameText
+from scripts.main.pygameElements import PygameSprite, PygameText, \
+    NotificationMassive
 
 last = 0
 
@@ -130,18 +131,26 @@ class AudioManager:
         CONST.Background = new
 
     def Stop(self, notif=True):
+        if notif:
+            NotificationMassive("Stop", 800).show()
         self.isPlaying = False
         pygame.mixer.music.stop()
 
     def Pause(self, notif=True):
+        if notif:
+            NotificationMassive("|| Pause", 800).show()
         self.isPlaying = False
         pygame.mixer.music.pause()
 
     def Unpause(self, notif=True):
+        if notif:
+            NotificationMassive("> Play", 800).show()
         self.isPlaying = True
         pygame.mixer.music.unpause()
 
     def Skip(self, notif=True):
+        if notif:
+            NotificationMassive(">> Skip", 800).show()
         self.isPlaying = False
         pygame.mixer.music.stop()
         self.isPlaying = True
@@ -163,6 +172,9 @@ class AudioManager:
             return 1000
         else:
             return 60000 / self.currentSong["bpm"]
+
+    def Update(self):
+        pass
 
     def GetRelativePos(self):
         if self.currentSong == {} or not self.isPlaying:
