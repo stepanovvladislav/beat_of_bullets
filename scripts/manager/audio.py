@@ -10,7 +10,7 @@ from mutagen.mp3 import MP3
 
 from scripts import CONST
 from scripts.main.data import *
-from scripts.main.pygameElements import PygameText
+from scripts.main.pygameElements import PygameSprite
 
 last = 0
 
@@ -43,7 +43,6 @@ class AudioManager:
 
     def PlayMusic(self, songFolder, Preview=False):
         songFolder = CONST.currentDirectory + songFolder
-
         pygame.mixer.music.load(songFolder + "/audio.mp3")
 
         song = MP3(songFolder + "/audio.mp3")
@@ -93,13 +92,14 @@ class AudioManager:
         if forceStop:
             self.isPlaying = False
         else:
-            songs = os.listdir(CONST.currentDirectory + "/.user/maps")
+            songs = os.listdir(
+                CONST.currentDirectory + "/.user/maps/" + CONST.enemy + '/')
 
             if len(songs) == 0:
                 self.isPlaying = False
                 pygame.mixer.music.set_pos(0)
             else:
-
+                song = ''
                 if len(self.alreadyPlayed.values()) == len(songs):
                     FirstTime = sorted(self.alreadyPlayed.keys())[0]
                     song = self.alreadyPlayed[FirstTime]
@@ -113,7 +113,21 @@ class AudioManager:
                             found = True
                             self.alreadyPlayed[time.time()] = song
 
-                self.PlayMusic("/.user/maps/" + song)
+                self.PlayMusic("/.user/maps/" + CONST.enemy + "/" + song)
+
+    def ChangeBackground(self, Filename, duration=500):
+        if not path.exists(Filename):
+            Filename = CONST.currentDirectory + "/data/sprites/background.png"
+        new = PygameSprite(Filename, vector2(0, 0), SkinSource.absolute,
+                           Positions.centre, Positions.centre)
+        backgroundScale = CONST.windowManager.width / new.image.get_width()
+        new.Scale(backgroundScale * 1.3)
+        new.Fade(0)
+        CONST.backgroundSprites.add(new)
+        new.FadeTo(1, duration)
+        CONST.Scheduler.AddDelayed(duration, CONST.backgroundSprites.remove,
+                                   sprite=CONST.Background)
+        CONST.Background = new
 
     def Stop(self, notif=True):
         self.isPlaying = False
@@ -149,7 +163,6 @@ class AudioManager:
             return 1000
         else:
             return 60000 / self.currentSong["bpm"]
-
 
     def GetRelativePos(self):
         if self.currentSong == {} or not self.isPlaying:

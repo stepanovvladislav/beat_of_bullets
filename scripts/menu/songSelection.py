@@ -175,20 +175,20 @@ class SongSelection:
         CONST.foregroundSprites.add(SongMapper)
         self.songMapper = SongMapper
 
-        diffEasy = PygameSprite(CONST.PixelWhite, vector2(300, 250),
+        diffNormal = PygameSprite(CONST.PixelWhite, vector2(300, 250),
                                 SkinSource.local, Positions.centre,
                                 Positions.topLeft,
                                 Color(62, 194, 194))
-        diffEasy.VectorScale(vector2(200, 150))
-        diffEasy.onHover(CONST.AudioManager.play, sound=self.SoundHover)
-        diffEasy.onHover(diffEasy.FadeTo, value=1, duration=100)
-        diffEasy.onClick(self.loadDiff, difficulty=Difficulty.Normal)
-        diffEasy.onHoverLost(diffEasy.FadeTo, value=0.8, duration=100)
-        diffEasy.tag = "EasyDifficulty"
-        diffEasy.borderBounds(20)
+        diffNormal.VectorScale(vector2(200, 150))
+        diffNormal.onHover(CONST.AudioManager.play, sound=self.SoundHover)
+        diffNormal.onHover(diffNormal.FadeTo, value=1, duration=100)
+        diffNormal.onClick(self.loadDiff, difficulty=Difficulty.Normal)
+        diffNormal.onHoverLost(diffNormal.FadeTo, value=0.8, duration=100)
+        diffNormal.tag = "NormalDifficulty"
+        diffNormal.borderBounds(20)
 
-        diffEasy.Fade(0.8)
-        CONST.foregroundSprites.add(diffEasy)
+        diffNormal.Fade(0.8)
+        CONST.foregroundSprites.add(diffNormal)
 
         diffHard = PygameSprite(CONST.PixelWhite, vector2(510, 250),
                                 SkinSource.local, Positions.centre,
@@ -218,17 +218,17 @@ class SongSelection:
         diffInsane.Fade(0.8)
         CONST.foregroundSprites.add(diffInsane)
 
-        EasyText = PygameText("Normal", 40, FontStyle.regular,
+        NormalText = PygameText("Normal", 40, FontStyle.regular,
                               vector2(227, 220),
                               Positions.centre, Positions.bottomCentre)
-        CONST.foregroundSprites.add(EasyText)
-        EasyText.tag = "EasyDifficulty"
+        CONST.foregroundSprites.add(NormalText)
+        NormalText.tag = "NormalDifficulty"
 
-        EasyDiff = PygameText("-", 50, FontStyle.heavy, vector2(227, 190),
+        NormalDiff = PygameText("-", 50, FontStyle.heavy, vector2(227, 190),
                               Positions.centre, Positions.bottomCentre)
-        CONST.foregroundSprites.add(EasyDiff)
-        EasyDiff.tag = "EasyDifficulty"
-        self.ezDefRating = EasyDiff
+        CONST.foregroundSprites.add(NormalDiff)
+        NormalDiff.tag = "NormalDifficulty"
+        self.ezDefRating = NormalDiff
 
         HardText = PygameText("Hard", 40, FontStyle.regular, vector2(347, 220),
                               Positions.centre, Positions.bottomCentre)
@@ -358,6 +358,8 @@ class SongSelection:
         songs = os.listdir(enemy)
         indexMin = 0 - 0.5 * len(songs)
         index = 0
+        song = ''
+        songSprite = None
 
         for song in songs:
             songSprite = PygameSprite(enemy + song + "/thumb.png",
@@ -386,6 +388,7 @@ class SongSelection:
             songSprite.data.append(enemy + song)
             index += 1
         self.loadDiffs()
+        self.GetNewSong(song, songSprite, Difficulty.Normal)
 
     def GetNewSong(self, songPath, sender, difficulty=None):
         songPath = "/.user/maps/" + CONST.enemy + '/' + songPath
@@ -455,14 +458,14 @@ class SongSelection:
                           "folder"] + "/normal.dd") as f:
                 data = f.read().split("\n")
                 for sprite in CONST.foregroundSprites.sprites:
-                    if sprite.tag == "EasyDifficulty":
+                    if sprite.tag == "NormalDifficulty":
                         sprite.enable()
                 self.ezDefRating.Text(data[0].split("|")[0])
-                diffEasy = True
+                deffNormal = True
         else:
-            diffEasy = False
+            deffNormal = False
             for sprite in CONST.foregroundSprites.sprites:
-                if sprite.tag == "EasyDifficulty":
+                if sprite.tag == "NormalDifficulty":
                     sprite.disable()
 
         if path.exists(CONST.AudioManager.currentSong["folder"] + "/hard.dd"):
@@ -498,7 +501,7 @@ class SongSelection:
             for sprite in CONST.foregroundSprites.sprites:
                 if sprite.tag == "InsaneDifficulty":
                     sprite.disable()
-        if diffEasy:
+        if deffNormal:
             return self.loadDiff(Difficulty.Normal)
         elif diffHard:
             return self.loadDiff(Difficulty.Hard)
