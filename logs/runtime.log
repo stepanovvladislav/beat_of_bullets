@@ -1,0 +1,12 @@
+--------------------------------------------------
+Running Beat of Bullets 16012023
+--------------------------------------------------
+
+[18:22:03][Log] : Initialised
+[ERROR] UNHANDLED !!! | 'artist' 
+Traceback (most recent call last):
+  File "C:\Users\4444\PycharmProjects\beat_of_bul�lets\main.py", line 128, in <module>
+    CONST.MenuManager.activeMenu.update()
+  File "C:\Users\4444\PycharmProjects\beat_of_bul�lets\scripts\menu\mainMenu.py", line 397, in update
+    if self.SongName != CONST.AudioManager.currentSong["artist"] + \
+KeyError: 'artist'
